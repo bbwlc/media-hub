@@ -1,0 +1,8 @@
+
+DROP TABLE IF EXISTS account;
+CREATE TABLE account (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    token VARCHAR(255) DEFAULT NULL
+);
