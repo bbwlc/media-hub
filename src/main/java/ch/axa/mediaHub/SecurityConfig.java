@@ -63,7 +63,7 @@ public class SecurityConfig {
     public UserDetailsService userDetailsService() {
         JdbcUserDetailsManager manager = new JdbcUserDetailsManager(dataSource);
         manager.setUsersByUsernameQuery("SELECT username, password_hash, true FROM account WHERE username = ?");
-        manager.setAuthoritiesByUsernameQuery("SELECT username, 'ROLE_USER' FROM account WHERE username = ?");
+        manager.setAuthoritiesByUsernameQuery("SELECT username, role FROM account WHERE username = ?");
         return manager;
     }
 

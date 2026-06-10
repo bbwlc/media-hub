@@ -17,6 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -56,7 +57,9 @@ public class AuthController {
         account.setPasswordHash(passwordEncoder.encode(dto.password()));
         account.setEmail(dto.email());
         accountRepository.save(account);
+        log.info("registered: {}", account);
         TokenData tokenData = new TokenData(jwtUtil.generateToken(dto.username()));
+        log.info("tokenData {}", tokenData);
         return ResponseEntity.status(HttpStatus.CREATED).body(tokenData);
     }
 
@@ -74,6 +77,21 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or expired token");
         }
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> me() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return accountRepository.findByUsername(auth.getName())
+                .map(account -> ResponseEntity.ok(Map.of(
+                        "username", account.getUsername(),
+                        "email",    account.getEmail() != null ? account.getEmail() : "",
+                        "role",     account.getRole()
+                )))
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
     @PostMapping("/signIn")

@@ -3,6 +3,7 @@ package ch.axa.mediaHub.restcontroller;
 import ch.axa.mediaHub.model.Account;
 import ch.axa.mediaHub.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,6 +23,7 @@ public class UserController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<Account>> getAllUsers() {
         return ResponseEntity.ok(userRepository.findAll());
     }

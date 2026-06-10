@@ -3,10 +3,12 @@ package ch.axa.mediaHub.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
 @Entity
+@ToString
 public class Account {
 
     @Id
@@ -22,6 +24,12 @@ public class Account {
     @Column(nullable = true)
     private String email;
 
+    @Column(nullable = false)
+    private String role = "ROLE_USER";
+
     @Column(nullable = true /* TODO: unique = true */)
     private String token;
+
+    @Column(name = "profile_picture")
+    private String profilePicture;
 }

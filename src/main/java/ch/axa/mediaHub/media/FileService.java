@@ -6,10 +6,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Service
 public class FileService {
@@ -43,5 +45,21 @@ public class FileService {
             Logger.getAnonymousLogger().log(Level.WARNING, e.getMessage(), e);
         }
         return Optional.empty();
+    }
+
+    public List<String> listFiles(String username) {
+        try {
+            String basePath = System.getProperty("user.dir");
+            Path userFolder = Paths.get(basePath, "uploads", username);
+            if (!Files.exists(userFolder)) return List.of();
+            return Files.list(userFolder)
+                .filter(Files::isRegularFile)
+                .map(p -> p.getFileName().toString())
+                .sorted()
+                .collect(Collectors.toList());
+        } catch (IOException e) {
+            Logger.getAnonymousLogger().log(Level.WARNING, e.getMessage(), e);
+            return List.of();
+        }
     }
 }
