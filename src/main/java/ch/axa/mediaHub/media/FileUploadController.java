@@ -2,7 +2,6 @@ package ch.axa.mediaHub.media;
 
 import ch.axa.mediaHub.model.Account;
 import ch.axa.mediaHub.repository.AccountRepository;
-import ch.axa.mediaHub.repository.SharedFileRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -20,14 +19,14 @@ public class FileUploadController {
 
     private final FileService fileService;
     private final AccountRepository accountRepository;
-    private final SharedFileRepository sharedFileRepository;
+    private final FileShareService fileShareService;
 
     public FileUploadController(FileService fileService,
                                 AccountRepository accountRepository,
-                                SharedFileRepository sharedFileRepository) {
+                                FileShareService fileShareService) {
         this.fileService = fileService;
         this.accountRepository = accountRepository;
-        this.sharedFileRepository = sharedFileRepository;
+        this.fileShareService = fileShareService;
     }
 
     @PostMapping("/upload/{username}")
@@ -73,7 +72,7 @@ public class FileUploadController {
 
         boolean allowed = username.equals(loggedInUser)
                 || isAdmin
-                || sharedFileRepository.canAccess(username, filename, loggedInUser);
+                || fileShareService.canAccess(username, filename, loggedInUser);
 
         if (!allowed) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
