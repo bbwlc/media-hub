@@ -19,6 +19,9 @@ public class Account {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
+    @Column(nullable = true)
+    private String email;
+
     @Column(nullable = true /* TODO: unique = true */)
     private String token;
 }

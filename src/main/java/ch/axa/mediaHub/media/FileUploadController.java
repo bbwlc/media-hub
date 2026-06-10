@@ -50,11 +50,11 @@ public class FileUploadController {
         }
 
         Optional<byte[]> fileData = fileService.downloadFile(loggedInUser, filename);
-        fileData.ifPresent(bytes -> ResponseEntity.ok()
+        if (fileData.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Datei nicht gefunden.");
+        }
+        return ResponseEntity.ok()
                 .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
-                .body(bytes));
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body("Datei nicht gefunden.");
+                .body(fileData.get());
     }
 }

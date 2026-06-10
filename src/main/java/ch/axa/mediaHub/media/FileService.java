@@ -34,7 +34,7 @@ public class FileService {
     public Optional<byte[]> downloadFile(String username, String filename) {
         try {
             String basePath = System.getProperty("user.dir");
-            Path filePath = Paths.get(basePath, "uploads", filename);
+            Path filePath = Paths.get(basePath, "uploads", username, filename);
 
             if (Files.exists(filePath) && Files.isRegularFile(filePath)) {
                 return Optional.of(Files.readAllBytes(filePath));
