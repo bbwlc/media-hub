@@ -94,12 +94,15 @@ class RegisterJwtWorkflowTest {
 
     // --- TC-02.6 ---
     @Test @Order(6)
-    void tc06_confirmLinkUsedTwice_returns404() throws Exception {
+    void tc06_confirmLinkUsedTwice_returns409() throws Exception {
         assertThat(capturedRegToken).as("Token aus TC-02.1 fehlt").isNotBlank();
 
-        // Account existiert bereits (nach TC-02.5) → UsernameAlreadyExistsException → 404
+        // Account existiert bereits (nach TC-02.5) → UsernameAlreadyExistsException
+        // → GlobalExceptionHandler → 409 Conflict (semantisch korrekt: Username ist vergeben)
         mockMvc.perform(get("/auth/register/confirm/{token}", capturedRegToken))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.error").value("Conflict"));
     }
 
     // --- TC-02.7 ---

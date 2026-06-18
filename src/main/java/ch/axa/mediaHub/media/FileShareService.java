@@ -2,10 +2,8 @@ package ch.axa.mediaHub.media;
 
 import ch.axa.mediaHub.model.SharedFile;
 import ch.axa.mediaHub.repository.SharedFileRepository;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -23,15 +21,15 @@ public class FileShareService {
     @Transactional    // should be on Service Level :)
     public SharedFile share(String owner, String filename, String sharedWith) {
         if (!fileService.listFiles(owner).contains(filename)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found.");
+            throw new FileNotFoundException(filename);
         }
         if (sharedWith == null) {
             if (sharedFileRepository.existsPublicShare(owner, filename)) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Already shared publicly.");
+                throw new ShareAlreadyExistsException("Already shared publicly.");
             }
         } else {
             if (sharedFileRepository.existsByOwnerAndFilenameAndSharedWith(owner, filename, sharedWith)) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Already shared with " + sharedWith + ".");
+                throw new ShareAlreadyExistsException("Already shared with " + sharedWith + ".");
             }
         }
         SharedFile sharedFile = new SharedFile();

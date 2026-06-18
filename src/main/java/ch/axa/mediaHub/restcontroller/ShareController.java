@@ -8,8 +8,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -33,12 +31,9 @@ public class ShareController {
         String loggedInUser = SecurityContextHolder.getContext().getAuthentication().getName();
         String sharedWith = (dto != null) ? dto.sharedWith() : null;
 
-        try {
-            SharedFile result = fileShareService.share(loggedInUser, filename, sharedWith);
-            return ResponseEntity.status(HttpStatus.CREATED).body(result);
-        } catch (ResponseStatusException e) {
-            return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
-        }
+        // FileNotFoundException → 404, ShareAlreadyExistsException → 409 via GlobalExceptionHandler
+        SharedFile result = fileShareService.share(loggedInUser, filename, sharedWith);
+        return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
     @DeleteMapping("/share/{filename}")

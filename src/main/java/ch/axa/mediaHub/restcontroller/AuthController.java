@@ -67,11 +67,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
 
-        try {
-            registrierungsService.starteRegistrierung(dto);
-        } catch (UsernameAlreadyExistsException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
-        }
+        registrierungsService.starteRegistrierung(dto); // UsernameAlreadyExistsException → GlobalExceptionHandler → 409
 
         return ResponseEntity.status(HttpStatus.ACCEPTED)
                 .body(Map.of("message", "Registration pending. Check your email to activate your account."));
@@ -79,16 +75,12 @@ public class AuthController {
 
     @GetMapping("/register/confirm/{token}")
     public ResponseEntity<?> confirm(@PathVariable String token) {
-        try {
-            PendingRegistration pending = registrierungsService.bestaetigen(token);
-            Account account = accountService.erstelleAccount(pending);
-            TokenData jwt = new TokenData(jwtUtil.generateToken(account.getUsername()));
-            return ResponseEntity.status(HttpStatus.CREATED).body(jwt);
-        } catch (TokenNotFoundException | UsernameAlreadyExistsException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        } catch (TokenExpiredException e) {
-            return ResponseEntity.status(HttpStatus.GONE).build();
-        }
+        // TokenNotFoundException → 404, TokenExpiredException → 410,
+        // UsernameAlreadyExistsException → 409 — alle via GlobalExceptionHandler
+        PendingRegistration pending = registrierungsService.bestaetigen(token);
+        Account account = accountService.erstelleAccount(pending);
+        TokenData jwt = new TokenData(jwtUtil.generateToken(account.getUsername()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(jwt);
     }
 
     @GetMapping("/protected")
