@@ -79,7 +79,7 @@ class FileUploadFlowTest {
                 .andExpect(status().isOk());
 
         String profilePicture = accountRepository.findByUsername("user2")
-                .orElseThrow().getProfilePicture();
+                .orElseThrow().getProfile().getProfilePicture();
         assertThat(profilePicture).isEqualTo(IMAGE_NAME);
     }
 

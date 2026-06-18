@@ -27,7 +27,8 @@ public class AuthenticationService {
     public Optional<TokenData> authenticate(String username, String password) {
         return accountRepository.findByUsername(username)
             .filter(account -> passwordEncoder.matches(password, account.getPasswordHash()))
-            .filter(account -> account.getStatus() != ProfileStatus.LOCKED)
+            .filter(account -> account.getProfile() == null ||
+                               account.getProfile().getStatus() != ProfileStatus.LOCKED)
             .map(account -> {
                 TokenData tokendata = new TokenData(jwtUtil.generateToken(username));
                 account.setToken(tokendata.getToken());

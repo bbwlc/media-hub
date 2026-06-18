@@ -108,7 +108,8 @@ public class AuthController {
         return accountRepository.findByUsername(auth.getName())
                 .map(account -> ResponseEntity.ok(Map.of(
                         "username", account.getUsername(),
-                        "email",    account.getEmail() != null ? account.getEmail() : "",
+                        "email",    account.getProfile() != null && account.getProfile().getEmail() != null
+                                        ? account.getProfile().getEmail() : "",
                         "role",     account.getRole()
                 )))
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());

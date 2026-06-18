@@ -38,11 +38,11 @@ public class UserController {
 
         return accountRepository.findByUsername(username)
                 .map(account -> {
-                    account.setStatus(status);
+                    account.getProfile().setStatus(status);
                     accountRepository.save(account);
                     return ResponseEntity.ok(Map.of(
                             "username", account.getUsername(),
-                            "status",   account.getStatus()
+                            "status",   account.getProfile().getStatus()
                     ));
                 })
                 .orElse(ResponseEntity.notFound().build());

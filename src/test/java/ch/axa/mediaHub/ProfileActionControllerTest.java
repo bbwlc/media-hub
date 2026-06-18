@@ -44,7 +44,7 @@ class ProfileActionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("VERIFIED"));
 
-        assertThat(accountRepository.findById(user3Id).orElseThrow().getStatus())
+        assertThat(accountRepository.findById(user3Id).orElseThrow().getProfile().getStatus())
                 .isEqualTo(ProfileStatus.VERIFIED);
     }
 

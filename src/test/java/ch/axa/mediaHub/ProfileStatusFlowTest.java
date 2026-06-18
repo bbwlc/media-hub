@@ -111,7 +111,7 @@ class ProfileStatusFlowTest {
                 .andExpect(status().isForbidden());
 
         Account user3 = accountRepository.findByUsername("user3").orElseThrow();
-        assertThat(user3.getStatus()).isNotEqualTo(ProfileStatus.LOCKED);
+        assertThat(user3.getProfile().getStatus()).isNotEqualTo(ProfileStatus.LOCKED);
     }
 
     // --- TC-04.8 ---
@@ -128,8 +128,9 @@ class ProfileStatusFlowTest {
     @Test
     @Order(9)
     void tc09_newAccountDefaultStatusIsUnverified() {
-        Account fresh = new Account();
-        assertThat(fresh.getStatus()).isEqualTo(ProfileStatus.UNVERIFIED);
+        // Status liegt jetzt auf UserProfile — Default-Wert prüfen
+        ch.axa.mediaHub.model.UserProfile freshProfile = new ch.axa.mediaHub.model.UserProfile();
+        assertThat(freshProfile.getStatus()).isEqualTo(ProfileStatus.UNVERIFIED);
     }
 
     // --- helper ---

@@ -53,10 +53,10 @@ public class FileUploadController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
 
-        // If it's an image, update the profile picture
+        // If it's an image, update the profile picture via UserProfile
         if (file.getContentType() != null && file.getContentType().startsWith("image/")) {
             accountRepository.findByUsername(loggedInUser).ifPresent(account -> {
-                account.setProfilePicture(file.getOriginalFilename());
+                account.getProfile().setProfilePicture(file.getOriginalFilename());
                 accountRepository.save(account);
             });
         }
@@ -107,7 +107,7 @@ public class FileUploadController {
         if (accountOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
         }
-        String profilePicture = accountOpt.get().getProfilePicture();
+        String profilePicture = accountOpt.get().getProfile().getProfilePicture();
         if (profilePicture == null || profilePicture.isBlank()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No avatar set.");
         }

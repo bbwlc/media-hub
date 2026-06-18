@@ -2,6 +2,7 @@ package ch.axa.mediaHub.restcontroller;
 
 import ch.axa.mediaHub.model.Account;
 import ch.axa.mediaHub.model.ProfileStatus;
+import ch.axa.mediaHub.model.UserProfile;
 import ch.axa.mediaHub.repository.AccountRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,39 +23,45 @@ public class ProfileActionController {
     @PostMapping("/api/me/profile/{id}/verify")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> verify(@PathVariable Long id) {
-        Account account = accountRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        if (account.getStatus() != ProfileStatus.UNVERIFIED) {
+        UserProfile profile = loadProfile(id);
+        if (profile.getStatus() != ProfileStatus.UNVERIFIED) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body("Cannot verify: profile is already " + account.getStatus());
+                    .body("Cannot verify: profile is already " + profile.getStatus());
         }
-        account.setStatus(ProfileStatus.VERIFIED);
-        return ResponseEntity.ok(accountRepository.save(account));
+        profile.setStatus(ProfileStatus.VERIFIED);
+        accountRepository.save(profile.getAccount());
+        return ResponseEntity.ok(profile);
     }
 
     @PostMapping("/api/me/profile/{id}/lock")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> lock(@PathVariable Long id) {
-        Account account = accountRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        if (account.getStatus() == ProfileStatus.LOCKED) {
+        UserProfile profile = loadProfile(id);
+        if (profile.getStatus() == ProfileStatus.LOCKED) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body("Cannot lock: profile is already LOCKED");
         }
-        account.setStatus(ProfileStatus.LOCKED);
-        return ResponseEntity.ok(accountRepository.save(account));
+        profile.setStatus(ProfileStatus.LOCKED);
+        accountRepository.save(profile.getAccount());
+        return ResponseEntity.ok(profile);
     }
 
     @PostMapping("/api/me/profile/{id}/unlock")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> unlock(@PathVariable Long id) {
-        Account account = accountRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        if (account.getStatus() != ProfileStatus.LOCKED) {
+        UserProfile profile = loadProfile(id);
+        if (profile.getStatus() != ProfileStatus.LOCKED) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body("Cannot unlock: profile is not LOCKED, current status is " + account.getStatus());
+                    .body("Cannot unlock: profile is not LOCKED, current status is " + profile.getStatus());
         }
-        account.setStatus(ProfileStatus.VERIFIED);
-        return ResponseEntity.ok(accountRepository.save(account));
+        profile.setStatus(ProfileStatus.VERIFIED);
+        accountRepository.save(profile.getAccount());
+        return ResponseEntity.ok(profile);
+    }
+
+    private UserProfile loadProfile(Long accountId) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        return account.getProfile();
     }
 }

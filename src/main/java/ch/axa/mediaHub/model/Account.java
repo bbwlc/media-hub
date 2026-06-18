@@ -4,12 +4,11 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import ch.axa.mediaHub.model.ProfileStatus;
 
 @Getter
 @Setter
 @Entity
-@ToString
+@ToString(exclude = "profile")
 public class Account {
 
     @Id
@@ -22,19 +21,12 @@ public class Account {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
-    @Column(nullable = true)
-    private String email;
-
     @Column(nullable = false)
     private String role = "ROLE_USER";
 
-    @Column(nullable = true /* TODO: unique = true */)
+    @Column(nullable = true)
     private String token;
 
-    @Column(name = "profile_picture")
-    private String profilePicture;
-
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private ProfileStatus status = ProfileStatus.UNVERIFIED;
+    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL, fetch = FetchType.EAGER, optional = false)
+    private UserProfile profile;
 }
