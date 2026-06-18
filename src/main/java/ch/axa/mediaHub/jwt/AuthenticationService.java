@@ -1,5 +1,6 @@
 package ch.axa.mediaHub.jwt;
 
+import ch.axa.mediaHub.model.ProfileStatus;
 import ch.axa.mediaHub.model.authentication.TokenData;
 import ch.axa.mediaHub.repository.AccountRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,9 +26,8 @@ public class AuthenticationService {
 
     public Optional<TokenData> authenticate(String username, String password) {
         return accountRepository.findByUsername(username)
-            .filter(account ->
-                    passwordEncoder.matches(password,
-                            account.getPasswordHash()))
+            .filter(account -> passwordEncoder.matches(password, account.getPasswordHash()))
+            .filter(account -> account.getStatus() != ProfileStatus.LOCKED)
             .map(account -> {
                 TokenData tokendata = new TokenData(jwtUtil.generateToken(username));
                 account.setToken(tokendata.getToken());

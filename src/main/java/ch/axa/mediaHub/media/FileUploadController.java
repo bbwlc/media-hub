@@ -2,7 +2,9 @@ package ch.axa.mediaHub.media;
 
 import ch.axa.mediaHub.model.Account;
 import ch.axa.mediaHub.repository.AccountRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -10,11 +12,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:3000")
+@Slf4j
 public class FileUploadController {
 
     private final FileService fileService;
@@ -28,12 +33,12 @@ public class FileUploadController {
         this.accountRepository = accountRepository;
         this.fileShareService = fileShareService;
     }
-
-    @PostMapping("/upload/{username}")
+// this is mandatory for Swagger : consumes = . . . .
+    @PostMapping(value = "/upload/{username}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadToUserFolder(
             @PathVariable String username,
             @RequestParam("file") MultipartFile file) {
-
+        log.info("Received file upload request for user: {}, file: {}", username, file.getOriginalFilename());
         String loggedInUser = SecurityContextHolder.getContext()
                 .getAuthentication()
                 .getName();
@@ -56,7 +61,7 @@ public class FileUploadController {
             });
         }
 
-        return ResponseEntity.ok(result.get());
+        return ResponseEntity.ok(result.get().toString());
     }
 
     @GetMapping("/download/{username}")
@@ -110,7 +115,15 @@ public class FileUploadController {
         if (fileData.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Avatar file not found.");
         }
+        String contentType;
+        try {
+            contentType = Files.probeContentType(Paths.get(profilePicture));
+        } catch (Exception e) {
+            contentType = null;
+        }
+        MediaType mediaType = contentType != null ? MediaType.parseMediaType(contentType) : MediaType.APPLICATION_OCTET_STREAM;
         return ResponseEntity.ok()
+                .contentType(mediaType)
                 .header("Content-Disposition", "inline; filename=\"" + profilePicture + "\"")
                 .body(fileData.get());
     }

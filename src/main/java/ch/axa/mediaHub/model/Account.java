@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import ch.axa.mediaHub.model.ProfileStatus;
 
 @Getter
 @Setter
@@ -32,4 +33,8 @@ public class Account {
 
     @Column(name = "profile_picture")
     private String profilePicture;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private ProfileStatus status = ProfileStatus.UNVERIFIED;
 }

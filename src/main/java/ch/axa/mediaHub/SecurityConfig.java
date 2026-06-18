@@ -37,8 +37,11 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/h2-console/**",
-                                     "/auth/signIn", "/auth/signOut", "/auth/register", "/auth/activate",
-                                     "/upload/**").permitAll()
+                                     "/auth/signIn", "/auth/signOut", "/auth/register",
+                                     "/auth/register/confirm/**",
+                                     "/upload/**",
+                                     "/users/*/avatar",
+                                     "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                     //.requestMatchers("/upload/**").authenticated()
                     .anyRequest().authenticated()
             )

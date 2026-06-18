@@ -1,6 +1,7 @@
 package ch.axa.mediaHub.jwt;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.stereotype.Component;
@@ -31,5 +32,29 @@ public class JWTUtil {
                 .setSigningKey(SECRET_KEY)
                 .parseClaimsJws(token)
                 .getBody();
+    }
+
+    public String generateRegistrationToken(String username, String email, String passwordHash) {
+        long now = System.currentTimeMillis();
+        return Jwts.builder()
+                .setSubject(username)
+                .claim("email",  email)
+                .claim("pwHash", passwordHash)
+                .claim("type",   "registration")
+                .setIssuedAt(new Date(now))
+                .setExpiration(new Date(now + 24 * 3_600_000L))
+                .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
+                .compact();
+    }
+
+    public Claims parseRegistrationToken(String token) {
+        Claims claims = Jwts.parser()
+                .setSigningKey(SECRET_KEY)
+                .parseClaimsJws(token)
+                .getBody();
+        if (!"registration".equals(claims.get("type", String.class))) {
+            throw new JwtException("Not a registration token");
+        }
+        return claims;
     }
 }

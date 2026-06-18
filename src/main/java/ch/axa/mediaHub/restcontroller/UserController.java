@@ -1,15 +1,15 @@
 package ch.axa.mediaHub.restcontroller;
 
 import ch.axa.mediaHub.model.Account;
+import ch.axa.mediaHub.model.ProfileStatus;
+import ch.axa.mediaHub.repository.AccountRepository;
 import ch.axa.mediaHub.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/users")
@@ -17,14 +17,34 @@ import java.util.List;
 public class UserController {
 
     private final UserRepository userRepository;
+    private final AccountRepository accountRepository;
 
-    public UserController(UserRepository userRepository) {
+    public UserController(UserRepository userRepository, AccountRepository accountRepository) {
         this.userRepository = userRepository;
+        this.accountRepository = accountRepository;
     }
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<Account>> getAllUsers() {
         return ResponseEntity.ok(userRepository.findAll());
+    }
+
+    @PatchMapping("/{username}/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> updateStatus(
+            @PathVariable String username,
+            @RequestParam ProfileStatus status) {
+
+        return accountRepository.findByUsername(username)
+                .map(account -> {
+                    account.setStatus(status);
+                    accountRepository.save(account);
+                    return ResponseEntity.ok(Map.of(
+                            "username", account.getUsername(),
+                            "status",   account.getStatus()
+                    ));
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 }

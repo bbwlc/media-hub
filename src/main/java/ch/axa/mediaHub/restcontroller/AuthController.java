@@ -1,8 +1,14 @@
 package ch.axa.mediaHub.restcontroller;
 
+import ch.axa.mediaHub.jwt.AccountService;
 import ch.axa.mediaHub.jwt.AuthenticationService;
 import ch.axa.mediaHub.jwt.JWTUtil;
+import ch.axa.mediaHub.jwt.RegistrierungsService;
+import ch.axa.mediaHub.jwt.TokenExpiredException;
+import ch.axa.mediaHub.jwt.TokenNotFoundException;
+import ch.axa.mediaHub.jwt.UsernameAlreadyExistsException;
 import ch.axa.mediaHub.model.Account;
+import ch.axa.mediaHub.model.authentication.PendingRegistration;
 import ch.axa.mediaHub.model.authentication.AuthenticationData;
 import ch.axa.mediaHub.model.authentication.RegisterDto;
 import ch.axa.mediaHub.model.authentication.TokenData;
@@ -30,37 +36,59 @@ public class AuthController {
     private final AuthenticationService authenticationService;
     private final PasswordEncoder passwordEncoder;
     private final JWTUtil jwtUtil;
+    private final RegistrierungsService registrierungsService;
+    private final AccountService accountService;
 
     @Autowired
     public AuthController(AccountRepository accountRepository,
                           AuthenticationService authenticationService,
                           PasswordEncoder passwordEncoder,
-                          JWTUtil jwtUtil) {
+                          JWTUtil jwtUtil,
+                          RegistrierungsService registrierungsService,
+                          AccountService accountService) {
         this.accountRepository = accountRepository;
         this.authenticationService = authenticationService;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.registrierungsService = registrierungsService;
+        this.accountService = accountService;
     }
+
+    private static final java.util.regex.Pattern EMAIL_PATTERN =
+            java.util.regex.Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterDto dto) {
+        // TODO #5: Pflichtfelder und E-Mail-Format prüfen
         if (dto.username() == null || dto.username().isBlank() ||
             dto.password() == null || dto.password().isBlank() ||
-            dto.email()    == null || dto.email().isBlank()) {
+            dto.email()    == null || dto.email().isBlank() ||
+            !EMAIL_PATTERN.matcher(dto.email()).matches()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
-        if (accountRepository.existsByUsername(dto.username())) {
+
+        try {
+            registrierungsService.starteRegistrierung(dto);
+        } catch (UsernameAlreadyExistsException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
-        Account account = new Account();
-        account.setUsername(dto.username());
-        account.setPasswordHash(passwordEncoder.encode(dto.password()));
-        account.setEmail(dto.email());
-        accountRepository.save(account);
-        log.info("registered: {}", account);
-        TokenData tokenData = new TokenData(jwtUtil.generateToken(dto.username()));
-        log.info("tokenData {}", tokenData);
-        return ResponseEntity.status(HttpStatus.CREATED).body(tokenData);
+
+        return ResponseEntity.status(HttpStatus.ACCEPTED)
+                .body(Map.of("message", "Registration pending. Check your email to activate your account."));
+    }
+
+    @GetMapping("/register/confirm/{token}")
+    public ResponseEntity<?> confirm(@PathVariable String token) {
+        try {
+            PendingRegistration pending = registrierungsService.bestaetigen(token);
+            Account account = accountService.erstelleAccount(pending);
+            TokenData jwt = new TokenData(jwtUtil.generateToken(account.getUsername()));
+            return ResponseEntity.status(HttpStatus.CREATED).body(jwt);
+        } catch (TokenNotFoundException | UsernameAlreadyExistsException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (TokenExpiredException e) {
+            return ResponseEntity.status(HttpStatus.GONE).build();
+        }
     }
 
     @GetMapping("/protected")
